@@ -24,10 +24,11 @@ public class MetamaskAuthenticationConstants {
     public static final String FRIENDLY_NAME = "metamask";
     public static final String NAME = "MetamaskAuthenticator";
     public static final String OAUTH2_PARAM_STATE = "state";
-    public static final String CALLBACK_URL = "callbackUrl";
-    public static final String OAUTH2_AUTH_URL = "/authenticationendpoint/metamask.do";
-    public static final String SEARCH_USER = "/scim2/Users/.search";
-    public static final String CREATE_USER = "/scim2/Users";
+    public static final String LOGIN_PAGE_URL = "/authenticationendpoint/metamask.do";
     public static final String PERSONAL_PREFIX = "\u0019Ethereum Signed Message:\n";
-    public static final String TENANT_URL = "tenantUrl";
+    public static final String ADDRESS = "address";
+    public static final String SIGNATURE = "signature";
+    public static final String SERVER_MESSAGE = "serverMessage";
+    public static final String METAMASK_ADDRESS_PREFIX = "0x";
+
 }

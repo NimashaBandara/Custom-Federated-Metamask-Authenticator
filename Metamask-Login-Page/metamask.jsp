@@ -62,7 +62,6 @@
                      from the pop up.Next sign button inside the pop up appears to sign  the message.
                 </div>
                 <h1><u></u></h1>
-
                                         
                 <div class="field">
                     <button class="ui icon button fluid"
@@ -92,13 +91,12 @@
        let hasSignature = false
            let verificationStatus = "False"
            let signature = ''
-           const message='sign this message wso2'
            let address = ''
            let accountOwner={
                userId:'',
                userName:''
            }
-       async function metamaskFunction(){
+       async function metamaskFunction(messageToSign){
 
            if (window.ethereum && window.ethereum.isMetaMask) {
                console.log("MetaMask Here!");
@@ -109,10 +107,8 @@
                        console.log('address : ' +address);
                        signature = await window.ethereum.request({
                            method: "personal_sign",
-                           params: [message, address],
+                           params: [messageToSign, address],
                        });
-                      
-                       console.log("signature : " + signature + " and address is : " + address)
                        hasSignature = true
 
                    })
@@ -125,24 +121,19 @@
        }
        let hasclicked=false
        async function handleNoDomain(key,value) {
-           console.log('key '+key)
-           console.log('value '+value)
-           console.log(hasclicked)
            
             if (hasclicked) {
                 console.warn("Preventing multi click.")
             } else {
 
             <%
-            String link = request.getParameter("redirect_uri");
             String state = request.getParameter("state");
+            String messageToSign=request.getParameter("serverMessage");
             %>
-
-                await metamaskFunction()
+                await metamaskFunction("<%=messageToSign%>")
                 hasclicked=true
-                console.log('state is : '+"<%=state%>")
-                console.log('url is : '+"<%=link%>")
-                document.location = "<%=link%>?idp=" + key + "&authenticator=" + value +"&state="+ "<%=state%>" +"&address="+address+"&signature="+signature;
+              
+                document.location = "<%=commonauthURL%>?idp=" + key + "&authenticator=" + value +"&state="+ "<%=state%>" +"&address="+address+"&signature="+signature;
             }
             
            
