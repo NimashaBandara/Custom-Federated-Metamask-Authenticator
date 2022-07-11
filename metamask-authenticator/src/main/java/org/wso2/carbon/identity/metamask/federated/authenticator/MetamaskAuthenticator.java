@@ -24,7 +24,6 @@ import org.web3j.crypto.Sign;
 import org.web3j.crypto.Keys;
 import org.web3j.utils.Numeric;
 import java.io.*;
-
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.oltu.oauth2.client.request.OAuthClientRequest;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
@@ -35,19 +34,13 @@ import org.wso2.carbon.identity.application.authentication.framework.exception.A
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.core.ServiceURLBuilder;
 import org.wso2.carbon.identity.core.URLBuilderException;
-
 import java.math.BigInteger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
         implements FederatedApplicationAuthenticator {
-
-    private static final Log log = LogFactory.getLog(MetamaskAuthenticator.class);
 
     @Override
     public boolean canHandle(HttpServletRequest request) {
@@ -70,36 +63,26 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
     @Override
     protected void initiateAuthenticationRequest(HttpServletRequest request, HttpServletResponse response,
             AuthenticationContext context) throws AuthenticationFailedException {
-        // get the session
+
+        // Get the session
         HttpSession session = request.getSession();
-        // create random message to get metamask signature
+        // Create random message to get metamask signature
         String serverMessage = RandomStringUtils.randomAlphabetic(10);
-
         try {
-
-            String authorizationEP = "";
-            try {
-                authorizationEP = ServiceURLBuilder.create().addPath(MetamaskAuthenticationConstants.LOGIN_PAGE_URL)
-                        .build().getAbsolutePublicURL();
-            } catch (URLBuilderException e) {
-
-                e.printStackTrace();
-            }
-            ;
+            String authorizationEndPoint = "";
+            authorizationEndPoint = ServiceURLBuilder.create()
+                    .addPath(MetamaskAuthenticationConstants.LOGIN_PAGE_URL)
+                    .build().getAbsolutePublicURL();
             String state = context.getContextIdentifier() + "," + MetamaskAuthenticationConstants.LOGIN_TYPE;
-
-            OAuthClientRequest authRequest = OAuthClientRequest.authorizationLocation(authorizationEP)
+            OAuthClientRequest authRequest = OAuthClientRequest.authorizationLocation(authorizationEndPoint)
                     .setParameter(MetamaskAuthenticationConstants.SERVER_MESSAGE, serverMessage)
                     .setState(state).buildQueryMessage();
-            // set serverMessage to session
+            // Set serverMessage to session
             session.setAttribute(MetamaskAuthenticationConstants.SERVER_MESSAGE, serverMessage);
-
-            // redirect user to metamask.jsp login page
-
+            // Redirect user to metamask.jsp login page.
             String loginPage = authRequest.getLocationUri();
             response.sendRedirect(loginPage);
-
-        } catch (OAuthSystemException | IOException e) {
+        } catch (OAuthSystemException | IOException | URLBuilderException e) {
             throw new AuthenticationFailedException(e.getMessage(), e);
         }
     }
@@ -107,60 +90,63 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
     @Override
     protected void processAuthenticationResponse(HttpServletRequest request, HttpServletResponse response,
             AuthenticationContext context) throws AuthenticationFailedException {
-        // get the message sent to metamask for sign in initiateAuthenticationRequest()
+
+        // Get the message sent to metamask for sign, in initiateAuthenticationRequest().
         HttpSession session = request.getSession(false);
         String serverMessage = (String) session.getAttribute(MetamaskAuthenticationConstants.SERVER_MESSAGE);
         String metamaskAddress = request.getParameter(MetamaskAuthenticationConstants.ADDRESS);
         String metamaskSignature = request.getParameter(MetamaskAuthenticationConstants.SIGNATURE);
-        boolean validation = false;
-        // call for validate signature from metamask
-        validation = validateMetamaskMessageSignature(metamaskAddress, serverMessage, metamaskSignature);
-
-        if (validation) {
-
+        String addressRecovered = null;
+        // Calculate the recovered address by passing serverMessage and metamaskSignature.
+        addressRecovered = calculatePublicAddressFromMetamaskSignature(serverMessage, metamaskSignature);
+        if (addressRecovered != null && addressRecovered.equals(metamaskAddress)) {
             AuthenticatedUser authenticatedUser = AuthenticatedUser
                     .createFederateAuthenticatedUserFromSubjectIdentifier(metamaskAddress);
             context.setSubject(authenticatedUser);
         } else {
-            log.trace(MetamaskAuthenticationErrorConstants.ErrorMessages.INVALID_SIGNATURE.getMessage());
+            throw new AuthenticationFailedException(
+                    MetamaskAuthenticationErrorConstants.ErrorMessages.INVALID_SIGNATURE.getCode(),
+                    MetamaskAuthenticationErrorConstants.ErrorMessages.INVALID_SIGNATURE.getMessage());
         }
-
     }
 
-    // validate metamask signature
-    private static boolean validateMetamaskMessageSignature(String metamaskAddress, String serverMessage,
+    /**
+     * Calculate public address from metamask signature and server generated message.
+     *
+     * @param serverMessage     String
+     * @param metamaskSignature String
+     * @return the recovered address from metamask signature using server generated message.
+     */
+    private static String calculatePublicAddressFromMetamaskSignature(String serverMessage,
             String metamaskSignature) {
-        boolean validationStatus = false;
+
         final String prefix = MetamaskAuthenticationConstants.PERSONAL_PREFIX + serverMessage.length();
         final byte[] msgHash = Hash.sha3((prefix + serverMessage).getBytes());
         final byte[] signatureBytes = Numeric.hexStringToByteArray(metamaskSignature);
-        // get the valid ECDSA curve point(v) from {r,s,v}
+        // Get the valid ECDSA curve point(v) from {r,s,v}
         byte validECPoint = signatureBytes[64];
         if (validECPoint < 27) {
             validECPoint += 27;
         }
-        final Sign.SignatureData sd = new Sign.SignatureData(validECPoint,
+        final Sign.SignatureData signatureData = new Sign.SignatureData(validECPoint,
                 Arrays.copyOfRange(signatureBytes, 0, 32),
                 Arrays.copyOfRange(signatureBytes, 32, 64));
         String addressRecovered = null;
-        // get the public key.
+        // Get the public key.
         final BigInteger publicKey = Sign.recoverFromSignature(validECPoint - 27, new ECDSASignature(
-                new BigInteger(1, sd.getR()),
-                new BigInteger(1, sd.getS())), msgHash);
+                new BigInteger(1, signatureData.getR()),
+                new BigInteger(1, signatureData.getS())), msgHash);
         if (publicKey != null) {
-            // convert public key into public address
+            // Convert public key into public address
             addressRecovered = MetamaskAuthenticationConstants.METAMASK_ADDRESS_PREFIX + Keys.getAddress(publicKey);
-            if (addressRecovered.equals(metamaskAddress)) {
-                validationStatus = true;
-            }
         }
-
-        return validationStatus;
+        return addressRecovered;
 
     }
 
     @Override
     public String getContextIdentifier(HttpServletRequest request) {
+
         String state = request.getParameter(MetamaskAuthenticationConstants.OAUTH2_PARAM_STATE);
         if (state != null) {
             return state.split(",")[0];

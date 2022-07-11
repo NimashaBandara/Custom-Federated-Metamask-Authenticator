@@ -23,8 +23,9 @@ public class MetamaskAuthenticationErrorConstants {
     public enum ErrorMessages {
 
         // If the metamask signature is inavlid
-        INVALID_SIGNATURE("Invalid Signature");
+        INVALID_SIGNATURE("MET-60000", "Invalid Signature");
 
+        private final String code;
         private final String message;
 
         /**
@@ -33,9 +34,20 @@ public class MetamaskAuthenticationErrorConstants {
          * @param code    Relevant error code.
          * @param message Relevant error message.
          */
-        ErrorMessages(String message) {
+        ErrorMessages(String code, String message) {
 
+            this.code = code;
             this.message = message;
+        }
+
+        /**
+         * To get the code of specific error.
+         *
+         * @return Error code.
+         */
+        public String getCode() {
+
+            return code;
         }
 
         /**
@@ -51,8 +63,7 @@ public class MetamaskAuthenticationErrorConstants {
         @Override
         public String toString() {
 
-            return String.format("%s - %s", message);
+            return String.format("%s - %s", code, message);
         }
     }
-
 }
