@@ -96,7 +96,7 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
         String metamaskAddress = request.getParameter(MetamaskAuthenticationConstants.ADDRESS);
         String metamaskSignature = request.getParameter(MetamaskAuthenticationConstants.SIGNATURE);
         String addressRecovered = null;
-        if(metamaskSignature!=null){
+        if(metamaskSignature!=""){
             addressRecovered = calculatePublicAddressFromMetamaskSignature(serverMessage, metamaskSignature);
         }
         else{
