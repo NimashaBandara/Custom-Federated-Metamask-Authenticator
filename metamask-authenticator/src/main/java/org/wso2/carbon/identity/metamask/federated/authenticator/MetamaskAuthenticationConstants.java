@@ -21,8 +21,8 @@ package org.wso2.carbon.identity.metamask.federated.authenticator;
 public class MetamaskAuthenticationConstants {
 
     public static final String LOGIN_TYPE = "metamask";
-    public static final String FRIENDLY_NAME = "metamask";
-    public static final String NAME = "MetamaskAuthenticator";
+    public static final String METAMASK_AUTHENTICATOR_FRIENDLY_NAME = "Metamask";
+    public static final String METAMASK_AUTHENTICATOR_NAME = "MetamaskAuthenticator";
     public static final String OAUTH2_PARAM_STATE = "state";
     public static final String LOGIN_PAGE_URL = "/authenticationendpoint/metamask.do";
     public static final String PERSONAL_PREFIX = "\u0019Ethereum Signed Message:\n";
@@ -30,5 +30,11 @@ public class MetamaskAuthenticationConstants {
     public static final String SIGNATURE = "signature";
     public static final String SERVER_MESSAGE = "serverMessage";
     public static final String METAMASK_ADDRESS_PREFIX = "0x";
+    public static final int VALID_ECPOINT_POSITION = 64;
+    public static final int VALID_ECPOINT_VALUE = 27;
+    public static final int START_POINT_R = 0;
+    public static final int END_POINT_R = 32;
+    public static final int START_POINT_S = 32;
+    public static final int END_POINT_S= 64;
 
 }

@@ -23,7 +23,8 @@ public class MetamaskAuthenticationErrorConstants {
     public enum ErrorMessages {
 
         // If the metamask signature is inavlid
-        INVALID_SIGNATURE("MET-60000", "Invalid Signature");
+        INVALID_SIGNATURE("MET-60000", "Invalid Signature"),
+        EMPTY_SIGNATURE("MET-60001", "Empty Signature");;
 
         private final String code;
         private final String message;

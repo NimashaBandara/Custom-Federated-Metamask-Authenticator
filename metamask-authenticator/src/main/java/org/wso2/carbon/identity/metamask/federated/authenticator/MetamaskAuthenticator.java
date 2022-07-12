@@ -51,13 +51,13 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
     @Override
     public String getFriendlyName() {
 
-        return MetamaskAuthenticationConstants.FRIENDLY_NAME;
+        return MetamaskAuthenticationConstants.METAMASK_AUTHENTICATOR_FRIENDLY_NAME;
     }
 
     @Override
     public String getName() {
 
-        return MetamaskAuthenticationConstants.NAME;
+        return MetamaskAuthenticationConstants.METAMASK_AUTHENTICATOR_NAME;
     }
 
     @Override
@@ -69,8 +69,7 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
         // Create random message to get metamask signature
         String serverMessage = RandomStringUtils.randomAlphabetic(10);
         try {
-            String authorizationEndPoint = "";
-            authorizationEndPoint = ServiceURLBuilder.create()
+            String authorizationEndPoint = ServiceURLBuilder.create()
                     .addPath(MetamaskAuthenticationConstants.LOGIN_PAGE_URL)
                     .build().getAbsolutePublicURL();
             String state = context.getContextIdentifier() + "," + MetamaskAuthenticationConstants.LOGIN_TYPE;
@@ -97,8 +96,15 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
         String metamaskAddress = request.getParameter(MetamaskAuthenticationConstants.ADDRESS);
         String metamaskSignature = request.getParameter(MetamaskAuthenticationConstants.SIGNATURE);
         String addressRecovered = null;
+        if(metamaskSignature!=null){
+            addressRecovered = calculatePublicAddressFromMetamaskSignature(serverMessage, metamaskSignature);
+        }
+        else{
+            throw new AuthenticationFailedException(
+                MetamaskAuthenticationErrorConstants.ErrorMessages.EMPTY_SIGNATURE.getCode(),
+                MetamaskAuthenticationErrorConstants.ErrorMessages.EMPTY_SIGNATURE.getMessage());
+        }
         // Calculate the recovered address by passing serverMessage and metamaskSignature.
-        addressRecovered = calculatePublicAddressFromMetamaskSignature(serverMessage, metamaskSignature);
         if (addressRecovered != null && addressRecovered.equals(metamaskAddress)) {
             AuthenticatedUser authenticatedUser = AuthenticatedUser
                     .createFederateAuthenticatedUserFromSubjectIdentifier(metamaskAddress);
@@ -124,24 +130,23 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
         final byte[] msgHash = Hash.sha3((prefix + serverMessage).getBytes());
         final byte[] signatureBytes = Numeric.hexStringToByteArray(metamaskSignature);
         // Get the valid ECDSA curve point(v) from {r,s,v}
-        byte validECPoint = signatureBytes[64];
-        if (validECPoint < 27) {
-            validECPoint += 27;
+        byte validECPoint = signatureBytes[MetamaskAuthenticationConstants.VALID_ECPOINT_POSITION];
+        if (validECPoint < MetamaskAuthenticationConstants.VALID_ECPOINT_VALUE) {
+            validECPoint += MetamaskAuthenticationConstants.VALID_ECPOINT_VALUE;
         }
         final Sign.SignatureData signatureData = new Sign.SignatureData(validECPoint,
-                Arrays.copyOfRange(signatureBytes, 0, 32),
-                Arrays.copyOfRange(signatureBytes, 32, 64));
+                Arrays.copyOfRange(signatureBytes, MetamaskAuthenticationConstants.START_POINT_R, MetamaskAuthenticationConstants.END_POINT_R),
+                Arrays.copyOfRange(signatureBytes, MetamaskAuthenticationConstants.START_POINT_S, MetamaskAuthenticationConstants.END_POINT_S));
         String addressRecovered = null;
         // Get the public key.
-        final BigInteger publicKey = Sign.recoverFromSignature(validECPoint - 27, new ECDSASignature(
+        final BigInteger publicKey = Sign.recoverFromSignature(validECPoint - MetamaskAuthenticationConstants.VALID_ECPOINT_VALUE, new ECDSASignature(
                 new BigInteger(1, signatureData.getR()),
                 new BigInteger(1, signatureData.getS())), msgHash);
         if (publicKey != null) {
             // Convert public key into public address
             addressRecovered = MetamaskAuthenticationConstants.METAMASK_ADDRESS_PREFIX + Keys.getAddress(publicKey);
         }
-        return addressRecovered;
-
+       return addressRecovered;
     }
 
     @Override
