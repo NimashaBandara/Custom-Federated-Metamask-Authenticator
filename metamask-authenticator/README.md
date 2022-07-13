@@ -6,9 +6,6 @@ This authenticator is developed as a PoC to research conducted on "Integrating W
 ### Set Up for the PoC
 
 1. Download the latest pack of the identity server.(5.11.0.22 or onwards)
-2. Create a local user claim for wallet address in the claims' section in management console(In this PoC the claim mapping was created as http://wso2.org/claims/wallet_address
-   ) and map the claim with an existing attribute "addresses"(Still we do not have developed unique attribute in LDAP)
-3. Add the uniqueness feature to the claim by dding additional property isUnique=true. ( follow https://is.docs.wso2.com/en/latest/learn/configuring-uniqueness-of-claims/ )
 4. Download and create metamask wallet account. visit https://metamask.io/
 5. Add metamask.jsp file into <IS_HOME>-> repository -> deployment -> server -> webapps -> authenticationendpoint folder
 6. Add <servlet-mapping> and  <servlet> for metamask.jsp page to <IS_HOME>-> repository -> deployment -> server -> webapps -> authenticationendpoint -> web.xml

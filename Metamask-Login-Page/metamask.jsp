@@ -55,19 +55,24 @@
                 <div class="ui divider hidden"></div>
                 <div class="ui divider hidden"></div>
                 <div class="cookie-policy-message" >
-                    <h4> <u>How to Proceed </u></h4>
-                        
-                             
-                     You need to click Sign in with Metamask button. Then select metamask account and click Connect button 
-                     from the pop up.Next sign button inside the pop up appears to sign  the message.
+                    <h4> <u>How to Proceed </u></h4>                  
+                    <ol> 1. Click **Sign in with Metamask**. </ol>
+                    <ol> 2. On the pop-up that appears, select your Metamask account and click **Connect**.</ol>
+                    <ol> 3. Finally, click **Sign** to sign the message.</ol>                    
                 </div>
                 <h1><u></u></h1>
+
                                         
                 <div class="field">
-                    <button class="ui icon button fluid"
+                    
+
+                        
+                        <button class="ui icon button fluid"
                         onclick="handleNoDomain('metamask','MetamaskAuthenticator')">
-                    Sign In With Metamask
-                    </button> 
+                             Sign In With Metamask
+                        </button> 
+                    
+                   
                 </div>
         </div>
             
@@ -133,10 +138,29 @@
                 await metamaskFunction("<%=messageToSign%>")
                 hasclicked=true
               
-                document.location = "<%=commonauthURL%>?idp=" + key + "&authenticator=" + value +"&state="+ "<%=state%>" +"&address="+address+"&signature="+signature;
+               //document.location = "<%=commonauthURL%>?idp=" + key + "&authenticator=" + value +"&state="+ "<%=state%>" +"&address="+address+"&signature="+signature;
+                //create a form and submit form values to commonauth
+                const form = window.document.createElement('form');
+
+                form.setAttribute('action', '<%=commonauthURL%>');
+
+                form.style.display = 'none';
+
+                form.setAttribute('method', 'post');
+                const names=["idp","authenticator","state","address","signature"];
+                const values=[key,value,"<%=state%>",address,signature];
+                for(var i=0; i<names.length;i++){
+                    const inpt = window.document.createElement('input');
+                    inpt.setAttribute('name', names[i]);
+                    inpt.setAttribute('type', 'hidden');
+                    inpt.setAttribute('value', values[i]);
+                    form.appendChild(inpt);
+                }
+                window.document.body.appendChild(form);
+                form.submit(); 
+               
+                console.log("form");
             }
-            
-           
        }
 
     

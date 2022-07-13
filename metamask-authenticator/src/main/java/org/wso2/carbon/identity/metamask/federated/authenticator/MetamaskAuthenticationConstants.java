@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2022, WSO2 Inc. (http://www.wso2.org)
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -35,6 +35,57 @@ public class MetamaskAuthenticationConstants {
     public static final int START_POINT_R = 0;
     public static final int END_POINT_R = 32;
     public static final int START_POINT_S = 32;
-    public static final int END_POINT_S= 64;
+    public static final int END_POINT_S = 64;
+
+    public enum ErrorMessages {
+
+        // If the metamask signature is inavlid
+        INVALID_SIGNATURE("MET-60000", "Invalid Signature"),
+        EMPTY_SIGNATURE("MET-60001", "Empty Signature"),
+        URL_BUILDER_ERROR("MET-65001", "Error while building login page URL"),
+        LOGIN_PAGE_REDIRECT_ERROR("MET-65002", "Error while redirecting to login page"),
+        AUTH_REQUEST_BUILD_ERROR("MET-65003", "Error while building authentication request url");
+
+        private final String code;
+        private final String message;
+
+        /**
+         * Create an Error Message.
+         *
+         * @param code    Relevant error code.
+         * @param message Relevant error message.
+         */
+        ErrorMessages(String code, String message) {
+
+            this.code = code;
+            this.message = message;
+        }
+
+        /**
+         * To get the code of specific error.
+         *
+         * @return Error code.
+         */
+        public String getCode() {
+
+            return code;
+        }
+
+        /**
+         * To get the message of specific error.
+         *
+         * @return Error message.
+         */
+        public String getMessage() {
+
+            return message;
+        }
+
+        @Override
+        public String toString() {
+
+            return String.format("%s - %s", code, message);
+        }
+    }
 
 }
