@@ -96,8 +96,6 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
     protected void initiateAuthenticationRequest(HttpServletRequest request, HttpServletResponse response,
                                                  AuthenticationContext context) throws AuthenticationFailedException {
 
-        // Get the session.
-        HttpSession session = request.getSession();
         // Create random message to get metamask signature.
         String serverMessage = RandomStringUtils.randomAlphabetic(10);
         try {
@@ -108,8 +106,8 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
             OAuthClientRequest authRequest = OAuthClientRequest.authorizationLocation(authorizationEndPoint)
                     .setParameter(SERVER_MESSAGE, serverMessage)
                     .setState(state).buildQueryMessage();
-            // Set serverMessage to session.
-            session.setAttribute(SERVER_MESSAGE, serverMessage);
+            // Set serverMessage to context.
+            context.setProperty(SERVER_MESSAGE, serverMessage);
             // Redirect user to metamask.jsp login page.
             String loginPage = authRequest.getLocationUri();
             response.sendRedirect(loginPage);
@@ -130,8 +128,7 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
                                                  AuthenticationContext context) throws AuthenticationFailedException {
 
         // Get the message sent to metamask for sign, in initiateAuthenticationRequest().
-        HttpSession session = request.getSession(false);
-        String serverMessage = (String) session.getAttribute(SERVER_MESSAGE);
+        String serverMessage = (String) context.getProperty(SERVER_MESSAGE);
         String metamaskAddress = request.getParameter(ADDRESS);
         String metamaskSignature = request.getParameter(SIGNATURE);
         String addressRecovered;
