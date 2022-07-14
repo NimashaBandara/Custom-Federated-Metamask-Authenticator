@@ -38,6 +38,7 @@ import org.wso2.carbon.identity.application.authentication.framework.exception.A
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.core.ServiceURLBuilder;
 import org.wso2.carbon.identity.core.URLBuilderException;
+
 import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.ErrorMessages.AUTH_REQUEST_BUILD_ERROR;
 import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.ErrorMessages.EMPTY_SIGNATURE;
 import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.ErrorMessages.INVALID_SIGNATURE;
@@ -60,9 +61,6 @@ import static org.wso2.carbon.identity.metamask.federated.authenticator.Metamask
 import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.START_POINT_S;
 import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.VALID_ECPOINT_POSITION;
 import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.VALID_ECPOINT_VALUE;
-
-
-
 
 import java.math.BigInteger;
 
