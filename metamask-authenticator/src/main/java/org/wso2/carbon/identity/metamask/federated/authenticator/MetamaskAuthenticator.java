@@ -38,7 +38,31 @@ import org.wso2.carbon.identity.application.authentication.framework.exception.A
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.core.ServiceURLBuilder;
 import org.wso2.carbon.identity.core.URLBuilderException;
-import org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.ErrorMessages;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.ErrorMessages.AUTH_REQUEST_BUILD_ERROR;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.ErrorMessages.EMPTY_SIGNATURE;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.ErrorMessages.INVALID_SIGNATURE;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.ErrorMessages.LOGIN_PAGE_REDIRECT_ERROR;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.ErrorMessages.URL_BUILDER_ERROR;
+
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.LOGIN_TYPE;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.ADDRESS;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.END_POINT_R;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.END_POINT_S;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.LOGIN_PAGE_URL;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.METAMASK_ADDRESS_PREFIX;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.METAMASK_AUTHENTICATOR_FRIENDLY_NAME;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.METAMASK_AUTHENTICATOR_NAME;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.OAUTH2_PARAM_STATE;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.PERSONAL_PREFIX;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.SERVER_MESSAGE;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.SIGNATURE;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.START_POINT_R;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.START_POINT_S;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.VALID_ECPOINT_POSITION;
+import static org.wso2.carbon.identity.metamask.federated.authenticator.MetamaskAuthenticationConstants.VALID_ECPOINT_VALUE;
+
+
+
 
 import java.math.BigInteger;
 
@@ -55,19 +79,19 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
     @Override
     public boolean canHandle(HttpServletRequest request) {
 
-        return MetamaskAuthenticationConstants.LOGIN_TYPE.equals(getLoginType(request));
+        return LOGIN_TYPE.equals(getLoginType(request));
     }
 
     @Override
     public String getFriendlyName() {
 
-        return MetamaskAuthenticationConstants.METAMASK_AUTHENTICATOR_FRIENDLY_NAME;
+        return METAMASK_AUTHENTICATOR_FRIENDLY_NAME;
     }
 
     @Override
     public String getName() {
 
-        return MetamaskAuthenticationConstants.METAMASK_AUTHENTICATOR_NAME;
+        return METAMASK_AUTHENTICATOR_NAME;
     }
 
     @Override
@@ -80,26 +104,26 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
         String serverMessage = RandomStringUtils.randomAlphabetic(10);
         try {
             String authorizationEndPoint = ServiceURLBuilder.create()
-                    .addPath(MetamaskAuthenticationConstants.LOGIN_PAGE_URL)
+                    .addPath(LOGIN_PAGE_URL)
                     .build().getAbsolutePublicURL();
-            String state = context.getContextIdentifier() + "," + MetamaskAuthenticationConstants.LOGIN_TYPE;
+            String state = context.getContextIdentifier() + "," + LOGIN_TYPE;
             OAuthClientRequest authRequest = OAuthClientRequest.authorizationLocation(authorizationEndPoint)
-                    .setParameter(MetamaskAuthenticationConstants.SERVER_MESSAGE, serverMessage)
+                    .setParameter(SERVER_MESSAGE, serverMessage)
                     .setState(state).buildQueryMessage();
             // Set serverMessage to session.
-            session.setAttribute(MetamaskAuthenticationConstants.SERVER_MESSAGE, serverMessage);
+            session.setAttribute(SERVER_MESSAGE, serverMessage);
             // Redirect user to metamask.jsp login page.
             String loginPage = authRequest.getLocationUri();
             response.sendRedirect(loginPage);
         } catch (URLBuilderException e) {
-            throw new AuthenticationFailedException(ErrorMessages.URL_BUILDER_ERROR.getCode(),
-                    ErrorMessages.URL_BUILDER_ERROR.getMessage());
+            throw new AuthenticationFailedException(URL_BUILDER_ERROR.getCode(),
+                    URL_BUILDER_ERROR.getMessage());
         } catch (OAuthSystemException e) {
-            throw new AuthenticationFailedException(ErrorMessages.AUTH_REQUEST_BUILD_ERROR.getCode(),
-                    ErrorMessages.AUTH_REQUEST_BUILD_ERROR.getMessage());
+            throw new AuthenticationFailedException(AUTH_REQUEST_BUILD_ERROR.getCode(),
+                    AUTH_REQUEST_BUILD_ERROR.getMessage());
         } catch (IOException e) {
-            throw new AuthenticationFailedException(ErrorMessages.LOGIN_PAGE_REDIRECT_ERROR.getCode(),
-                    ErrorMessages.LOGIN_PAGE_REDIRECT_ERROR.getMessage());
+            throw new AuthenticationFailedException(LOGIN_PAGE_REDIRECT_ERROR.getCode(),
+                    LOGIN_PAGE_REDIRECT_ERROR.getMessage());
         }
     }
 
@@ -109,16 +133,16 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
 
         // Get the message sent to metamask for sign, in initiateAuthenticationRequest().
         HttpSession session = request.getSession(false);
-        String serverMessage = (String) session.getAttribute(MetamaskAuthenticationConstants.SERVER_MESSAGE);
-        String metamaskAddress = request.getParameter(MetamaskAuthenticationConstants.ADDRESS);
-        String metamaskSignature = request.getParameter(MetamaskAuthenticationConstants.SIGNATURE);
+        String serverMessage = (String) session.getAttribute(SERVER_MESSAGE);
+        String metamaskAddress = request.getParameter(ADDRESS);
+        String metamaskSignature = request.getParameter(SIGNATURE);
         String addressRecovered;
         if (!metamaskSignature.isEmpty()) {
             addressRecovered = calculatePublicAddressFromMetamaskSignature(serverMessage, metamaskSignature);
         } else {
             throw new AuthenticationFailedException(
-                    ErrorMessages.EMPTY_SIGNATURE.getCode(),
-                    ErrorMessages.EMPTY_SIGNATURE.getMessage());
+                    EMPTY_SIGNATURE.getCode(),
+                    EMPTY_SIGNATURE.getMessage());
         }
         // Calculate the recovered address by passing serverMessage and metamaskSignature.
         if (addressRecovered != null && addressRecovered.equals(metamaskAddress)) {
@@ -127,8 +151,8 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
             context.setSubject(authenticatedUser);
         } else {
             throw new AuthenticationFailedException(
-                    ErrorMessages.INVALID_SIGNATURE.getCode(),
-                    ErrorMessages.INVALID_SIGNATURE.getMessage());
+                    INVALID_SIGNATURE.getCode(),
+                    INVALID_SIGNATURE.getMessage());
         }
     }
 
@@ -142,29 +166,29 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
     private static String calculatePublicAddressFromMetamaskSignature(String serverMessage,
                                                                       String metamaskSignature) {
 
-        final String prefix = MetamaskAuthenticationConstants.PERSONAL_PREFIX + serverMessage.length();
+        final String prefix = PERSONAL_PREFIX + serverMessage.length();
         final byte[] msgHash = Hash.sha3((prefix + serverMessage).getBytes());
         final byte[] signatureBytes = Numeric.hexStringToByteArray(metamaskSignature);
         // Get the valid ECDSA curve point(v) from {r,s,v}.
-        byte validECPoint = signatureBytes[MetamaskAuthenticationConstants.VALID_ECPOINT_POSITION];
-        if (validECPoint < MetamaskAuthenticationConstants.VALID_ECPOINT_VALUE) {
-            validECPoint += MetamaskAuthenticationConstants.VALID_ECPOINT_VALUE;
+        byte validECPoint = signatureBytes[VALID_ECPOINT_POSITION];
+        if (validECPoint < VALID_ECPOINT_VALUE) {
+            validECPoint += VALID_ECPOINT_VALUE;
         }
         final Sign.SignatureData signatureData = new Sign.SignatureData(validECPoint,
-                Arrays.copyOfRange(signatureBytes, MetamaskAuthenticationConstants.START_POINT_R,
-                        MetamaskAuthenticationConstants.END_POINT_R),
-                Arrays.copyOfRange(signatureBytes, MetamaskAuthenticationConstants.START_POINT_S,
-                        MetamaskAuthenticationConstants.END_POINT_S));
+                Arrays.copyOfRange(signatureBytes, START_POINT_R,
+                        END_POINT_R),
+                Arrays.copyOfRange(signatureBytes, START_POINT_S,
+                        END_POINT_S));
         String addressRecovered = null;
         // Get the public key.
         final BigInteger publicKey =
-                Sign.recoverFromSignature(validECPoint - MetamaskAuthenticationConstants.VALID_ECPOINT_VALUE,
+                Sign.recoverFromSignature(validECPoint - VALID_ECPOINT_VALUE,
                         new ECDSASignature(
                                 new BigInteger(1, signatureData.getR()),
                                 new BigInteger(1, signatureData.getS())), msgHash);
         if (publicKey != null) {
             // Convert public key into public address.
-            addressRecovered = MetamaskAuthenticationConstants.METAMASK_ADDRESS_PREFIX + Keys.getAddress(publicKey);
+            addressRecovered = METAMASK_ADDRESS_PREFIX + Keys.getAddress(publicKey);
         }
         return addressRecovered;
     }
@@ -172,7 +196,7 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
     @Override
     public String getContextIdentifier(HttpServletRequest request) {
 
-        String state = request.getParameter(MetamaskAuthenticationConstants.OAUTH2_PARAM_STATE);
+        String state = request.getParameter(OAUTH2_PARAM_STATE);
         if (state != null) {
             return state.split(",")[0];
         } else {
@@ -182,7 +206,7 @@ public class MetamaskAuthenticator extends AbstractApplicationAuthenticator
 
     private String getLoginType(HttpServletRequest request) {
 
-        String state = request.getParameter(MetamaskAuthenticationConstants.OAUTH2_PARAM_STATE);
+        String state = request.getParameter(OAUTH2_PARAM_STATE);
         if (state != null) {
             String[] stateElements = state.split(",");
             if (stateElements.length > 1) {
