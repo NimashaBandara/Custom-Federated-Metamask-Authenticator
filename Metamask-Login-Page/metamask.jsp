@@ -1,12 +1,12 @@
 <%--
-  ~ Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+  ~ Copyright (c) 2022, WSO2 Inc. (http://www.wso2.org)
   ~
   ~ WSO2 Inc. licenses this file to you under the Apache License,
   ~ Version 2.0 (the "License"); you may not use this file except
   ~ in compliance with the License.
-  ~ You may obtain a copy of the License at
+  ~You may obtain a copy of the License at
   ~
-  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~      http://www.apache.org/licenses/LICENSE-2.0
   ~
   ~ Unless required by applicable law or agreed to in writing,
   ~ software distributed under the License is distributed on an
@@ -33,7 +33,6 @@
     <% } else { %>
         <jsp:include page="includes/header.jsp"/>
     <% } %>
-
    
 </head>
 <body class="login-portal layout authentication-portal-layout">
@@ -61,24 +60,15 @@
                     <ol> 3. Finally, click **Sign** to sign the message.</ol>                    
                 </div>
                 <h1><u></u></h1>
-
-                                        
                 <div class="field">
-                    
-
                         
                         <button class="ui icon button fluid"
                         onclick="handleNoDomain('metamask','MetamaskAuthenticator')">
                              Sign In With Metamask
-                        </button> 
-                    
-                   
+                        </button>
                 </div>
         </div>
-            
         </div>
-       
-
     </main>
       <!-- product-footer -->
       <%
@@ -121,7 +111,6 @@
                console.log("Need to install MetaMask");
                
            }
-           
 
        }
        let hasclicked=false
